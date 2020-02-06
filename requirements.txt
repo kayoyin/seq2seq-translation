@@ -1,1 +1,3 @@
-torch
+torch==1.4
+torchtext==0.5
+spacy
