@@ -413,9 +413,9 @@ if __name__ == "__main__":
                lower=True,
                batch_first=True)
 
-    train_data = TranslationDataset(path="../data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
-    valid_data = TranslationDataset(path="../data/", exts=["asl_val_processed.txt", "en_val.txt"], fields=[asl, en])
-    test_data = TranslationDataset(path="../data/", exts=["asl_test_processed.txt", "en_test.txt"], fields=[asl, en])
+    train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
+    valid_data = TranslationDataset(path="data/", exts=["asl_val_processed.txt", "en_val.txt"], fields=[asl, en])
+    test_data = TranslationDataset(path="data/", exts=["asl_test_processed.txt", "en_test.txt"], fields=[asl, en])
 
     asl.build_vocab(train_data, min_freq=2)
     en.build_vocab(train_data, min_freq=2)
