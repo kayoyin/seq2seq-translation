@@ -12,6 +12,7 @@ class Lang:
         self.word2index = {}
         self.word2count = {}
         self.index2word = {0: "SOS", 1: "EOS"}
+        self.vocabulary = ["SOS", "EOS"]
         self.n_words = 2  # Count SOS and EOS
 
     def addSentence(self, sentence):
@@ -23,6 +24,7 @@ class Lang:
             self.word2index[word] = self.n_words
             self.word2count[word] = 1
             self.index2word[self.n_words] = word
+            self.vocabulary.append(word)
             self.n_words += 1
         else:
             self.word2count[word] += 1
@@ -52,7 +54,7 @@ def prepareData():
     asl, en = Lang("asl"), Lang("en")
     with open("../data/en_train.txt", "r") as file:
         en_train = file.readlines()
-    with open("../data/asl_train.txt", "r") as file:
+    with open("../data/asl_train_processed.txt", "r") as file:
         asl_train = file.readlines()
     print("Counting words...")
     for a,e in zip(asl_train, en_train):

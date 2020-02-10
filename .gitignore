@@ -2,3 +2,6 @@ venv/
 __pycache__/
 
 *.pt
+glove.*.txt
+*.zip
+6B*

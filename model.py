@@ -12,17 +12,19 @@ import torch.nn.functional as F
 
 from dataset import *
 from utils import *
+from embeddings import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MAX_LENGTH = 50
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, target_vocab):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
 
-        self.embedding = nn.Embedding(input_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size)
+        #self.embedding = nn.Embedding(input_size, hidden_size)
+        self.embedding, num_embeddings, embedding_dim = glove_embedding(asl.vocabulary)
+        self.gru = nn.GRU(embedding_dim, hidden_size)
 
     def forward(self, input, hidden):
         embedded = self.embedding(input).view(1, 1, -1)
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     asl, en, asl_train, en_train = prepareData()
 
     hidden_size = 256
-    encoder1 = EncoderRNN(asl.n_words, hidden_size).to(device)
+    encoder1 = EncoderRNN(asl.n_words, hidden_size, asl.vocabulary).to(device)
     attn_decoder1 = AttnDecoderRNN(hidden_size, en.n_words, dropout_p=0.1).to(device)
 
     trainIters(asl, en, asl_train, en_train, encoder1, attn_decoder1, 75000, print_every=20)
