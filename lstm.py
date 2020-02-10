@@ -39,10 +39,10 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
-
+        embed = self.dropout(self.embedding(src))
         # embedded = [src len, batch size, emb dim]
 
-        outputs, (hidden, cell) = self.rnn(self.embedding)
+        outputs, (hidden, cell) = self.rnn(embed)
 
         # outputs = [src len, batch size, hid dim * n directions]
         # hidden = [n layers * n directions, batch size, hid dim]
@@ -269,8 +269,6 @@ if __name__ == "__main__":
 
     print(vars(test_data.examples[1]))
 
-    raise ValueError
-
     asl.build_vocab(train_data, min_freq=2)
     en.build_vocab(train_data, min_freq=2)
 
@@ -284,10 +282,12 @@ if __name__ == "__main__":
         batch_size=BATCH_SIZE,
         device=device)
 
+    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
+
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = 128
-    DEC_EMB_DIM = 128
+    ENC_EMB_DIM = embedding_dim
+    DEC_EMB_DIM = embedding_dim
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5
