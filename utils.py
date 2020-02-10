@@ -12,6 +12,12 @@ def tokenize_en(text):
     """
     return [tok.text for tok in spacy_en.tokenizer(text)]
 
+def tokenize_asl(text):
+    """
+    Tokenizes English text from a string into a list of strings (tokens)
+    """
+    return [tok.text for tok in spacy_en.tokenizer(text)][::-1]
+
 def asMinutes(s):
     m = math.floor(s / 60)
     s -= m * 60

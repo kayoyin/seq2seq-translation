@@ -14,6 +14,8 @@ import time
 
 from embeddings import *
 from utils import *
+from allennlp.modules.elmo import Elmo, batch_to_ids
+
 
 SEED = 1234
 
@@ -26,6 +28,18 @@ torch.backends.cudnn.deterministic = True
 spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+asl = Field(tokenize=tokenize_asl,
+            init_token='<sos>',
+            eos_token='<eos>',
+            lower=True,
+            batch_first=False)
+
+en = Field(tokenize=tokenize_en,
+           init_token='<sos>',
+           eos_token='<eos>',
+           lower=True,
+           batch_first=False)
+
 class Encoder(nn.Module):
     def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
         super().__init__()
@@ -35,9 +49,8 @@ class Encoder(nn.Module):
 
         options_file = "elmo_2x1024_128_2048cnn_1xhighway_options.json"
         weight_file = "elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
-        elmo = Elmo(options_file, weight_file, 2, dropout=0)
 
-        self.embedding = nn.Embedding(input_dim, emb_dim)
+        self.elmo = Elmo(options_file, weight_file, 1, dropout=0)
 
         self.rnn = nn.LSTM(emb_dim, hid_dim, n_layers, dropout=dropout)
 
@@ -45,8 +58,10 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
+        character_ids = batch_to_ids(src)
 
-        embedded = self.dropout(self.embedding(src))
+        embedded = self.elmo(character_ids)
+        embedded = embedded['elmo_representations'][0].permute(1,0,2)
 
         # embedded = [src len, batch size, emb dim]
 
@@ -179,6 +194,7 @@ def train(model, iterator, optimizer, criterion, clip):
     for i, batch in enumerate(iterator):
         src = batch.src
         trg = batch.trg
+        src = np.array([[asl.vocab.itos[t] for t in s] for s in src]).T
 
         optimizer.zero_grad()
 
@@ -246,27 +262,14 @@ def epoch_time(start_time, end_time):
 
 def translate_sentence(sentence):
     tokenized = tokenize_de(sentence) #tokenize sentence
-    numericalized = [SRC.vocab.stoi[t] for t in tokenized] #convert tokens into indexes
+    numericalized = [asl.vocab.stoi[t] for t in tokenized] #convert tokens into indexes
     tensor = torch.LongTensor(numericalized).unsqueeze(1).to(device) #convert to tensor and add batch dimension
     translation_tensor_probs = model(tensor, None, 0).squeeze(1) #pass through model to get translation probabilities
     translation_tensor = torch.argmax(translation_tensor_probs, 1) #get translation from highest probabilities
-    translation = [TRG.vocab.itos[t] for t in translation_tensor][1:] #we ignore the first token, just like we do in the training loop
+    translation = [en.vocab.itos[t] for t in translation_tensor][1:] #we ignore the first token, just like we do in the training loop
     return translation
 
 if __name__ == "__main__":
-    asl = Field(tokenize=tokenize_en,
-                init_token='<sos>',
-                eos_token='<eos>',
-                lower=True,
-                batch_first=False)
-
-
-    en = Field(tokenize=tokenize_en,
-               init_token='<sos>',
-               eos_token='<eos>',
-               lower=True,
-               batch_first=False)
-
     train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
     valid_data = TranslationDataset(path="data/", exts=["asl_val_processed.txt", "en_val.txt"], fields=[asl, en])
     test_data = TranslationDataset(path="data/", exts=["asl_test_processed.txt", "en_test.txt"], fields=[asl, en])
@@ -288,15 +291,12 @@ if __name__ == "__main__":
     train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
         (train_data, valid_data, test_data),
         batch_size=BATCH_SIZE,
-        sort_key=lambda x: len(x.text),
         device=device)
-
-    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
 
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = embedding_dim
-    DEC_EMB_DIM = embedding_dim
+    ENC_EMB_DIM = 256
+    DEC_EMB_DIM = 256
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5
@@ -307,7 +307,6 @@ if __name__ == "__main__":
 
     model = Seq2Seq(enc, dec, device).to(device)
     model.apply(init_weights)
-    model.encoder.embedding.load_state_dict({'weight': torch.from_numpy(weights_matrix)})
 
 
     optimizer = optim.Adam(model.parameters())

@@ -81,6 +81,13 @@ if __name__ == "__main__":
                 eos_token='<eos>',
                 lower=True,
                 batch_first=False)
-    train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, asl])
+    en = Field(tokenize=tokenize_en,
+                init_token='<sos>',
+                eos_token='<eos>',
+                lower=True,
+                batch_first=False)
+    train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
     asl.build_vocab(train_data, min_freq=2)
     weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
+    print(num_embeddings, embedding_dim)
+    np.save("glove.npy", weights_matrix)

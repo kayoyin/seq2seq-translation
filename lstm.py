@@ -246,7 +246,7 @@ def translate_sentence(sentence):
     return translation
 
 if __name__ == "__main__":
-    asl = Field(tokenize=tokenize_en,
+    asl = Field(tokenize=tokenize_asl,
                 init_token='<sos>',
                 eos_token='<eos>',
                 lower=True,
