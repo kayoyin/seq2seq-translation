@@ -15,7 +15,11 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 
-#from dataset import *
+from allennlp.modules.elmo import Elmo, batch_to_ids
+
+from torchtext.data import Field
+from torchtext.datasets import TranslationDataset
+from utils import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 glove_path = './'
@@ -54,26 +58,29 @@ def glove_embedding(target_vocab):
     weights_matrix = np.zeros((matrix_len, 50))
     words_found = 0
 
+    print("matrix len", matrix_len)
+
     for i, word in enumerate(target_vocab):
         try:
             weights_matrix[i] = glove[word]
             words_found += 1
         except KeyError:
             weights_matrix[i] = np.random.normal(scale=0.6, size=(emb_dim,))
-    print(weights_matrix)
-    print(words_found, matrix_len)
     num_embeddings, embedding_dim = weights_matrix.shape
-    print(num_embeddings, embedding_dim)
-    emb_layer = nn.Embedding(num_embeddings, embedding_dim)
-    #emb_layer.weight.data.copy_(torch.from_numpy(weights_matrix))
-    emb_layer.load_state_dict({'weight': torch.from_numpy(weights_matrix)})
+    return weights_matrix, num_embeddings, embedding_dim
 
+def elmo_embedding():
+    options_file = "elmo_2x1024_128_2048cnn_1xhighway_options.json"
+    weight_file = "2x1024_128_2048cnn_1xhighway_weights.hdf5"
+    elmo = Elmo(options_file, weight_file, 2, dropout=0)
 
-    return emb_layer, num_embeddings, embedding_dim
 
 if __name__ == "__main__":
-    asl, en, asl_train, en_train = prepareData()
-    emb_layer, num_embeddings, embedding_dim = glove_embedding(asl.vocabulary)
-    print(emb_layer)
-    print(num_embeddings)
-    print(embedding_dim)
+    asl = Field(tokenize=tokenize_en,
+                init_token='<sos>',
+                eos_token='<eos>',
+                lower=True,
+                batch_first=False)
+    train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, asl])
+    asl.build_vocab(train_data, min_freq=2)
+    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)

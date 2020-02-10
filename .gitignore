@@ -5,3 +5,5 @@ __pycache__/
 glove.*.txt
 *.zip
 6B*
+*.json
+*.hdf5

@@ -1,8 +1,16 @@
 import time
 import math
 from torchtext.data.metrics import bleu_score
+import spacy
+
+spacy_en = spacy.load('en')
 
 
+def tokenize_en(text):
+    """
+    Tokenizes English text from a string into a list of strings (tokens)
+    """
+    return [tok.text for tok in spacy_en.tokenizer(text)]
 
 def asMinutes(s):
     m = math.floor(s / 60)

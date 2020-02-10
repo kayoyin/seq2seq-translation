@@ -5,6 +5,7 @@ import torch.optim as optim
 from torchtext.datasets import TranslationDataset
 from torchtext.data import Field, BucketIterator
 
+import spacy
 import numpy as np
 
 import random
@@ -22,6 +23,7 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
+spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Encoder(nn.Module):
@@ -30,6 +32,10 @@ class Encoder(nn.Module):
 
         self.hid_dim = hid_dim
         self.n_layers = n_layers
+
+        options_file = "elmo_2x1024_128_2048cnn_1xhighway_options.json"
+        weight_file = "elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
+        elmo = Elmo(options_file, weight_file, 2, dropout=0)
 
         self.embedding = nn.Embedding(input_dim, emb_dim)
 
@@ -40,9 +46,11 @@ class Encoder(nn.Module):
     def forward(self, src):
         # src = [src len, batch size]
 
+        embedded = self.dropout(self.embedding(src))
+
         # embedded = [src len, batch size, emb dim]
 
-        outputs, (hidden, cell) = self.rnn(self.embedding)
+        outputs, (hidden, cell) = self.rnn(embedded)
 
         # outputs = [src len, batch size, hid dim * n directions]
         # hidden = [n layers * n directions, batch size, hid dim]
@@ -267,9 +275,7 @@ if __name__ == "__main__":
     print(f"Number of validation examples: {len(valid_data.examples)}")
     print(f"Number of testing examples: {len(test_data.examples)}")
 
-    print(vars(test_data.examples[1]))
-
-    raise ValueError
+    print(vars(train_data.examples[0]))
 
     asl.build_vocab(train_data, min_freq=2)
     en.build_vocab(train_data, min_freq=2)
@@ -282,12 +288,15 @@ if __name__ == "__main__":
     train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
         (train_data, valid_data, test_data),
         batch_size=BATCH_SIZE,
+        sort_key=lambda x: len(x.text),
         device=device)
+
+    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
 
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = 128
-    DEC_EMB_DIM = 128
+    ENC_EMB_DIM = embedding_dim
+    DEC_EMB_DIM = embedding_dim
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5
