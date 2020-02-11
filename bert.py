@@ -53,6 +53,7 @@ class Encoder(nn.Module):
         # src = [src len, batch size]
         src = [' '.join(s[list(s).index('<sos>')+1:list(s).index('<eos>')]) for s in src]
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
         input_ids = torch.tensor(tokenizer.encode(src))
         embedded = self.bert(input_ids)
         embedded = embedded[0]
