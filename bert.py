@@ -27,7 +27,7 @@ torch.backends.cudnn.deterministic = True
 spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-asl = Field(tokenize=tokenize_asl,
+asl = Field(tokenize=tokenize_asl
             init_token='<sos>',
             eos_token='<eos>',
             lower=True,
@@ -54,8 +54,9 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
-
-        embedded = self.bert(src)
+        src = [' '.join(s[list(s).index('<sos>')+1:list(s).index('<eos>')]) for s in src]
+        input_ids = torch.tensor([tokenizer.encode(sent) for sent in src])
+        embedded = self.bert(input_ids)
         embedded = embedded[0]
         print(embedded.shape)
 
