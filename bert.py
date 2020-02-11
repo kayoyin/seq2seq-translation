@@ -5,14 +5,12 @@ import torch.optim as optim
 from torchtext.datasets import TranslationDataset
 from torchtext.data import Field, BucketIterator
 
-import spacy
 import numpy as np
 
 import random
 import math
 import time
 
-from embeddings import *
 from utils import *
 from transformers import BertTokenizer, BertModel
 
@@ -24,10 +22,9 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
-spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-asl = Field(tokenize=tokenize_asl
+asl = Field(tokenize=tokenize_asl,
             init_token='<sos>',
             eos_token='<eos>',
             lower=True,

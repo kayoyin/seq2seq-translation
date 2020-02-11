@@ -28,8 +28,7 @@ torch.backends.cudnn.deterministic = True
 spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-asl = Field(tokenize=tokenize_asl,
-            init_token='<sos>',
+asl = Field(init_token='<sos>',
             eos_token='<eos>',
             lower=True,
             batch_first=False)
@@ -58,6 +57,7 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
+
         character_ids = batch_to_ids(src)
 
         embedded = self.elmo(character_ids)
