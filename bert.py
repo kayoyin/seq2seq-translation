@@ -23,7 +23,8 @@ torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+#device = 'cpu'
+print(device)
 asl = Field(tokenize=tokenize_asl,
             init_token='<sos>',
             eos_token='<eos>',
@@ -43,7 +44,7 @@ class Encoder(nn.Module):
         self.hid_dim = hid_dim
         self.n_layers = n_layers
 
-        self.bert = BertModel.from_pretrained('bert-base-uncased')
+        self.bert = BertModel.from_pretrained('bert-base-uncased').to(device)
 
         self.rnn = nn.LSTM(emb_dim, hid_dim, n_layers, dropout=dropout)
 
@@ -51,14 +52,15 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
-        src = [' '.join(s[list(s).index('<sos>')+1:list(s).index('<eos>')]) for s in src]
+        #src = [' '.join(s[list(s).index('<sos>')+1:list(s).index('<eos>')]) for s in src]
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-        input_ids = torch.tensor(tokenizer.encode(src))
-
-        embedded = self.bert(input_ids)
-        embedded = embedded[0]
-        print(embedded.shape)
+       # print(src[0])
+        input_ids = torch.tensor([tokenizer.encode(list(s)) for s in src])
+        #print(input_ids.shape)
+        embedded = self.bert(input_ids.to(device))
+        embedded = embedded[0].permute(1,0,2)
+        #print(embedded.shape)
 
         # embedded = [src len, batch size, emb dim]
 
@@ -292,8 +294,8 @@ if __name__ == "__main__":
 
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = 256
-    DEC_EMB_DIM = 256
+    ENC_EMB_DIM = 768
+    DEC_EMB_DIM = 768
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5

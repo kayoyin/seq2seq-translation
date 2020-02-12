@@ -21,8 +21,9 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda')
+print(device)
 class Encoder(nn.Module):
     def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
         super().__init__()
@@ -301,7 +302,7 @@ if __name__ == "__main__":
     TRG_PAD_IDX = en.vocab.stoi[en.pad_token]
     criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
-    N_EPOCHS = 10
+    N_EPOCHS = 50
     CLIP = 1
 
     best_valid_loss = float('inf')
