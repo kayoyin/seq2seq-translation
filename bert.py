@@ -55,6 +55,7 @@ class Encoder(nn.Module):
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
         input_ids = torch.tensor(tokenizer.encode(src))
+
         embedded = self.bert(input_ids)
         embedded = embedded[0]
         print(embedded.shape)

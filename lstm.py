@@ -11,7 +11,6 @@ import random
 import math
 import time
 
-from embeddings import *
 from utils import *
 
 SEED = 1234
@@ -282,12 +281,10 @@ if __name__ == "__main__":
         batch_size=BATCH_SIZE,
         device=device)
 
-    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
-
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = embedding_dim
-    DEC_EMB_DIM = embedding_dim
+    ENC_EMB_DIM = 126
+    DEC_EMB_DIM = 126
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5
@@ -298,7 +295,6 @@ if __name__ == "__main__":
 
     model = Seq2Seq(enc, dec, device).to(device)
     model.apply(init_weights)
-    model.encoder.embedding.load_state_dict({'weight': torch.from_numpy(weights_matrix)})
 
 
     optimizer = optim.Adam(model.parameters())
