@@ -312,7 +312,7 @@ if __name__ == "__main__":
     TRG_PAD_IDX = en.vocab.stoi[en.pad_token]
     criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
-    N_EPOCHS = 50
+    N_EPOCHS = 100
     CLIP = 1
 
     best_valid_loss = float('inf')
