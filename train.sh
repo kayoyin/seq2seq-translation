@@ -1,9 +1,9 @@
 while :
 do
   python lstm.py
-  sleep 5
+  pkill -9 python
   python glove.py
-  sleep 5
+  pkill -9 python
   python elmo.py
-  sleep 5
+  pkill -9 python
 done
