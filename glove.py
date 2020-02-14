@@ -11,7 +11,7 @@ import random
 import math
 import time
 
-from embeddings import *
+#from embeddings import *
 from utils import *
 
 SEED = 1234
@@ -23,7 +23,7 @@ torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+print(device)
 class Encoder(nn.Module):
     def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
         super().__init__()
@@ -282,8 +282,9 @@ if __name__ == "__main__":
         batch_size=BATCH_SIZE,
         device=device)
 
-    weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
-
+    #weights_matrix, num_embeddings, embedding_dim = glove_embedding(asl.vocab.itos)
+    weights_matrix = np.load('glove.npy')
+    embedding_dim = weights_matrix.shape[1]
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
     ENC_EMB_DIM = embedding_dim
@@ -305,7 +306,7 @@ if __name__ == "__main__":
     TRG_PAD_IDX = en.vocab.stoi[en.pad_token]
     criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
-    N_EPOCHS = 10
+    N_EPOCHS = 100
     CLIP = 1
 
     best_valid_loss = float('inf')

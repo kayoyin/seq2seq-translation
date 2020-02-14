@@ -5,9 +5,8 @@ import torch.optim as optim
 from torchtext.datasets import TranslationDataset
 from torchtext.data import Field, BucketIterator
 
-import spacy
 import numpy as np
-
+from tqdm import tqdm
 import random
 import math
 import time
@@ -25,9 +24,8 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
-spacy_en = spacy.load('en')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+print(device)
 asl = Field(init_token='<sos>',
             eos_token='<eos>',
             lower=True,
@@ -57,12 +55,11 @@ class Encoder(nn.Module):
 
     def forward(self, src):
         # src = [src len, batch size]
-        print(src[0])
-        character_ids = batch_to_ids(src)
+        
+        character_ids = batch_to_ids(src).to(device)
 
         embedded = self.elmo(character_ids)
         embedded = embedded['elmo_representations'][0].permute(1,0,2)
-
         # embedded = [src len, batch size, emb dim]
 
         outputs, (hidden, cell) = self.rnn(embedded)
@@ -191,7 +188,7 @@ def train(model, iterator, optimizer, criterion, clip):
 
     epoch_loss = 0
 
-    for i, batch in enumerate(iterator):
+    for i, batch in tqdm(enumerate(iterator), total=len(iterator)):
         src = batch.src
         trg = batch.trg
         src = np.array([[asl.vocab.itos[t] for t in s] for s in src]).T
@@ -220,6 +217,7 @@ def train(model, iterator, optimizer, criterion, clip):
         optimizer.step()
 
         epoch_loss += loss.item()
+       
 
     return epoch_loss / len(iterator)
 
@@ -233,6 +231,7 @@ def evaluate(model, iterator, criterion):
         for i, batch in enumerate(iterator):
             src = batch.src
             trg = batch.trg
+            src = np.array([[asl.vocab.itos[t] for t in s] for s in src]).T
 
             output = model(src, trg, 0)  # turn off teacher forcing
 
@@ -313,7 +312,7 @@ if __name__ == "__main__":
     TRG_PAD_IDX = en.vocab.stoi[en.pad_token]
     criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
-    N_EPOCHS = 10
+    N_EPOCHS = 100
     CLIP = 1
 
     best_valid_loss = float('inf')

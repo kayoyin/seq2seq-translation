@@ -7,3 +7,4 @@ glove.*.txt
 6B*
 *.json
 *.hdf5
+*.npy

@@ -1,6 +1,9 @@
+from tqdm import tqdm
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
 
 from torchtext.datasets import TranslationDataset
 from torchtext.data import Field, BucketIterator
@@ -21,8 +24,9 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.device('cuda')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cpu')
+#device = 'cpu'
 print(device)
 class Encoder(nn.Module):
     def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
@@ -168,9 +172,9 @@ def train(model, iterator, optimizer, criterion, clip):
 
     epoch_loss = 0
 
-    for i, batch in enumerate(iterator):
-        src = batch.src
-        trg = batch.trg
+    for i, batch in tqdm(enumerate(iterator), total=len(iterator)):
+        src = batch.src.to(model.device)
+        trg = batch.trg.to(model.device)
 
         optimizer.zero_grad()
 
@@ -196,6 +200,7 @@ def train(model, iterator, optimizer, criterion, clip):
         optimizer.step()
 
         epoch_loss += loss.item()
+
 
     return epoch_loss / len(iterator)
 
@@ -302,16 +307,18 @@ if __name__ == "__main__":
     TRG_PAD_IDX = en.vocab.stoi[en.pad_token]
     criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
-    N_EPOCHS = 50
+    N_EPOCHS = 100
     CLIP = 1
 
     best_valid_loss = float('inf')
 
     for epoch in range(N_EPOCHS):
+        print(epoch)
 
         start_time = time.time()
-
+        print("training...")
         train_loss = train(model, train_iterator, optimizer, criterion, CLIP)
+        print("validating...")
         valid_loss = evaluate(model, valid_iterator, criterion)
 
         end_time = time.time()
