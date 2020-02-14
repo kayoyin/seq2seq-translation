@@ -16,8 +16,8 @@ from utils import *
 from allennlp.modules.elmo import Elmo, batch_to_ids
 
 
-SEED = 1234
-
+SEED = random.randint(1,9999)
+print(SEED)
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -330,16 +330,8 @@ if __name__ == "__main__":
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'elmo-model.pt')
+            torch.save(model.state_dict(), 'elmo-model-{}.pt'.format(SEED))
 
         print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
-
-
-    model.load_state_dict(torch.load('elmo-model.pt'))
-
-    test_loss = evaluate(model, test_iterator, criterion)
-
-    print(f'| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
-
