@@ -25,8 +25,6 @@ torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#device = torch.device('cpu')
-#device = 'cpu'
 print(device)
 class Encoder(nn.Module):
     def __init__(self, input_dim, emb_dim, hid_dim, n_layers, dropout):
@@ -241,15 +239,6 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs
 
 
-def translate_sentence(sentence):
-    tokenized = tokenize_de(sentence) #tokenize sentence
-    numericalized = [SRC.vocab.stoi[t] for t in tokenized] #convert tokens into indexes
-    tensor = torch.LongTensor(numericalized).unsqueeze(1).to(device) #convert to tensor and add batch dimension
-    translation_tensor_probs = model(tensor, None, 0).squeeze(1) #pass through model to get translation probabilities
-    translation_tensor = torch.argmax(translation_tensor_probs, 1) #get translation from highest probabilities
-    translation = [TRG.vocab.itos[t] for t in translation_tensor][1:] #we ignore the first token, just like we do in the training loop
-    return translation
-
 if __name__ == "__main__":
     asl = Field(tokenize=tokenize_asl,
                 init_token='<sos>',
@@ -286,6 +275,7 @@ if __name__ == "__main__":
         (train_data, valid_data, test_data),
         batch_size=BATCH_SIZE,
         device=device)
+
 
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
