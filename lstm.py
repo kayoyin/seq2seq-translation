@@ -126,7 +126,7 @@ class Seq2Seq(nn.Module):
         # e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
 
         if trg is None:
-            trg = torch.zeros((25, src.shape[1])).fill_(2).long().to(src.device)
+            trg = torch.zeros((50, src.shape[1])).fill_(2).long().to(src.device)
             assert teacher_forcing_ratio == 0, "Must be zero during inference"
 
         batch_size = trg.shape[1]

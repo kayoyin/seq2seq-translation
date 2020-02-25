@@ -51,8 +51,8 @@ if __name__ == "__main__":
 
     model_name = sys.argv[1]
     print(model_name)
-    model_path = model_name + '.pt'
-    output_path = model_name + '.txt'
+    model_path = 'models/' + model_name + '.pt'
+    output_path = 'predictions/' + model_name + '.txt'
 
     train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
     valid_data = TranslationDataset(path="data/", exts=["asl_val_processed.txt", "en_val.txt"], fields=[asl, en])
@@ -79,8 +79,8 @@ if __name__ == "__main__":
 
     INPUT_DIM = len(asl.vocab)
     OUTPUT_DIM = len(en.vocab)
-    ENC_EMB_DIM = 256
-    DEC_EMB_DIM = 256
+    ENC_EMB_DIM = 126
+    DEC_EMB_DIM = 126
     HID_DIM = 512
     N_LAYERS = 2
     ENC_DROPOUT = 0.5
@@ -100,7 +100,7 @@ if __name__ == "__main__":
             print(sent)
             pred = translate_sentence(sent)
             print(pred)
-            file.write(pred)
+            file.write(pred + '\n')
 
 
 
