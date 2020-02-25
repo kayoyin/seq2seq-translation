@@ -1,7 +1,7 @@
 from collections import Counter
 import math
 import numpy as np
-
+import sys
 
 
 def bleu_stats(hypothesis, reference):
@@ -40,7 +40,8 @@ def get_bleu(hypotheses, reference):
     return 100 * bleu(stats)
 
 if __name__ == "__main__":
-    with open("pred.txt", "r") as file:
+    pred_path = sys.argv[1]
+    with open(pred_path, "r") as file:
         pred = file.readlines()
 
     with open("data/en_test.txt", "r") as file:
