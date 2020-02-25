@@ -6,6 +6,7 @@ from torchtext.data import Field, BucketIterator
 import random
 import math
 import time
+import sys
 from utils import *
 from lstm import *
 
@@ -43,9 +44,15 @@ def translate_sentence(sentence):
     translation_tensor_probs = model(tensor, None, 0).squeeze(1) #pass through model to get translation probabilities
     translation_tensor = torch.argmax(translation_tensor_probs, 1) #get translation from highest probabilities
     translation = [en.vocab.itos[t] for t in translation_tensor][1:] #we ignore the first token, just like we do in the training loop
+    translation = ' '.join(translation[:translation.index('<eos>')])
     return translation
 
 if __name__ == "__main__":
+
+    model_name = sys.argv[1]
+    print(model_name)
+    model_path = model_name + '.pt'
+    output_path = model_name + '.txt'
 
     train_data = TranslationDataset(path="data/", exts=["asl_train_processed.txt", "en_train.txt"], fields=[asl, en])
     valid_data = TranslationDataset(path="data/", exts=["asl_val_processed.txt", "en_val.txt"], fields=[asl, en])
@@ -83,15 +90,16 @@ if __name__ == "__main__":
     dec = Decoder(OUTPUT_DIM, DEC_EMB_DIM, HID_DIM, N_LAYERS, DEC_DROPOUT)
 
     model = Seq2Seq(enc, dec, device).to(device)
-    model.load_state_dict(torch.load('lstm-model.pt'))
+    model.load_state_dict(torch.load(model_path))
 
     with open('data/asl_test_processed.txt', 'r') as file:
         data = file.readlines()
 
-    with open('lstm_predict.txt', 'w') as file:
+    with open(output_path, 'w') as file:
         for sent in data:
             print(sent)
             pred = translate_sentence(sent)
+            print(pred)
             file.write(pred)
 
 
